@@ -6,87 +6,59 @@
 
 from pathlib import Path
 import sqlite3
+import textwrap
 
 
 DB_FILE = Path(__file__).parents[1] / 'db_file' / 'mylibrary.db'
+CREATE_TABLES_SQL = Path(__file__).parent / 'create_tables.sql'
 
 
-def create_connection(db_file):
+def create_connection(db_file: Path) -> sqlite3.Connection:
     """
     Create a database connection to a SQLite database specified by db_file
     """
-    try:
-        db_conn = sqlite3.connect(db_file)
-        return db_conn
-    except sqlite3.Error as err:
-        return err
+    return sqlite3.connect(db_file)
 
 
-def create_table(db_conn, sql_stmt):
+def execute_script(db_conn: sqlite3.Connection, sql_script: str) -> sqlite3.Cursor:
     """
-    Create a table from the SQL statement
-    :param db_conn: Connection object
-    :param sql_stmt: a CREATE TABLE statement
+    Execute an SQL script
     """
+    sql_script = textwrap.dedent(sql_script)
+    return db_conn.executescript(sql_script)
+
+
+def main(db_file: Path, sql_script: Path):
+
+    # create connection to the database
     try:
-        cursor = db_conn.cursor()
-        cursor.execute(sql_stmt)
+        conn = create_connection(db_file)
+        print("DB was created successfully.")
     except sqlite3.Error as err:
-        return err
+        print("DB was NOT created.")
+        print(f"Error: {err}")
+        exit()
+
+    # extract sql script from the file
+    try:
+        with open(sql_script) as file_obj:
+            create_tables_script = file_obj.read().rstrip()
+    except FileNotFoundError as err:
+        print(f"File {sql_script} was not found")
+        print(f"Error: {err}")
+        exit()
+
+    # create tables
+    try:
+        execute_script(conn, create_tables_script)
+        print("All tables were created successfully.")
+    except sqlite3.Error as err:
+        print("Tables were NOT created")
+        print(f"Error: {err}")
+        exit()
+
+    conn.close()
 
 
 if __name__ == '__main__':
-    # create a database connection
-    conn = create_connection(DB_FILE)
-
-    if isinstance(conn, sqlite3.Error):
-        print("DB was NOT created.")
-        print(conn)
-
-    elif isinstance(conn, sqlite3.Connection):
-        print("DB was created successfully.")
-
-        # create tables
-        cr_tab_stmts = {
-            'books': """
-                CREATE TABLE IF NOT EXISTS books (
-                    book_id integer PRIMARY KEY,
-                    title text NOT NULL,
-                    description text,
-                    isbn text, 
-                    original_language text,
-                    release_date text
-                );
-            """,
-            'authors': """
-                CREATE TABLE IF NOT EXISTS authors (
-                    author_id integer PRIMARY KEY,
-                    first_name text NOT NULL,
-                    last_name text NOT NULL,
-                    birthday text,
-                    death_date text 
-                );
-            """,
-            'writtenby': """
-                CREATE TABLE IF NOT EXISTS writtenby (
-                    record_id integer PRIMARY KEY,
-                    author_id integer NOT NULL,
-                    book_id integer NOT NULL
-                );
-            """
-        }
-        errors = {}
-        for tab in cr_tab_stmts:
-            msg = create_table(conn, cr_tab_stmts[tab])
-            if msg:
-                errors[tab] = msg
-
-        # close the database connection
-        conn.close()
-
-        if errors:
-            print(f"{len(errors)} tables were NOT created.")
-            for tab in errors:
-                print(f"{tab}: {errors[tab]}")
-        else:
-            print("All tables were created successfully.")
+    main(DB_FILE, CREATE_TABLES_SQL)
