@@ -18,9 +18,10 @@ CREATE TABLE IF NOT EXISTS author (
     death_date text
 );
 CREATE TABLE IF NOT EXISTS book_author (
+    id integer PRIMARY KEY,
     book_id integer NOT NULL,
     author_id integer NOT NULL,
-    PRIMARY KEY (book_id, author_id)
+    UNIQUE (book_id, author_id)
     FOREIGN KEY (book_id) REFERENCES book(id),
     FOREIGN KEY (author_id) REFERENCES author(id)
 );
