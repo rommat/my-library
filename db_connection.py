@@ -22,3 +22,18 @@ def execute_script(db_conn: sqlite3.Connection, sql_script: str) -> sqlite3.Curs
     """
     sql_script = textwrap.dedent(sql_script)
     return db_conn.executescript(sql_script)
+
+
+def execute_select(db_conn: sqlite3.Connection, sql_query: str) -> list:
+    """
+    Execute an SQL SELECT statement
+    """
+    sql_query = textwrap.dedent(sql_query)
+    db_conn.row_factory = sqlite3.Row
+    query_result = db_conn.execute(sql_query)
+    field_names = [desc[0] for desc in query_result.description]
+    result_table = [
+        {field: row[field] for field in field_names}
+        for row in query_result
+    ]
+    return result_table
