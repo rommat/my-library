@@ -18,6 +18,7 @@ $ my-lib author list --books|--no-books
 
 import click
 import data_handler
+import output_processing as out
 
 
 @click.group()
@@ -35,6 +36,7 @@ def book():
 def list_books(authors):
     related_item = 'author' if authors else None
     result_table = data_handler.list_all_items('book', related_item)
+    out.table2console(result_table)
 
 
 @cli.group()
@@ -47,3 +49,4 @@ def author():
 def list_authors(books):
     related_item = 'book' if books else None
     result_table = data_handler.list_all_items('author', related_item)
+    out.table2console(result_table)
