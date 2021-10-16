@@ -31,8 +31,10 @@ def book():
 
 
 @book.command('list', help='Get list of all the books in the library')
-def list_books():
-    result_table = data_handler.list_all_items('book')
+@click.option('--authors/--no-authors', default=False, help='Get author(s) of the book(s).')
+def list_books(authors):
+    related_item = 'author' if authors else None
+    result_table = data_handler.list_all_items('book', related_item)
 
 
 @cli.group()
@@ -41,5 +43,7 @@ def author():
 
 
 @author.command('list', help='Get list of all the authors in the library')
-def list_authors():
-    result_table = data_handler.list_all_items('author')
+@click.option('--books/--no-books', default=False, help='Get author(s) of the book(s).')
+def list_authors(books):
+    related_item = 'book' if books else None
+    result_table = data_handler.list_all_items('author', related_item)
