@@ -22,7 +22,22 @@ def get_column_names(db_conn: sqlite3.Connection, table_name: str) -> list:
     return [column['name'] for column in column_names]
 
 
-def get_related_info(db_conn, table_name, related_item, item_id=None):
+def get_items_info(db_conn: sqlite3.Connection, table_name: str, column_names: list, parameters=None) -> list:
+
+    where_clause = ""
+    if parameters:
+        where_clause = "WHERE " + " AND ".join(
+            [f"{name}={parameters[name]}" if name == 'id' else
+             f"{name}='{parameters[name]}'" for name in parameters]
+        )
+    get_items_sql = f"""
+        SELECT {','.join(column_names)} FROM {table_name} {where_clause};
+    """
+
+    return db.execute_select(db_conn, get_items_sql)
+
+
+def get_related_info(db_conn: sqlite3.Connection, table_name: str, related_item: str, item_id=None) -> dict:
 
     select_clause = {
         'book': "b.title book",
@@ -58,16 +73,9 @@ def list_all_items(table_name: str, related_item: str):
         print(f"Error: {err}")
         return False
 
-    # ------GET ALL ITEMs
-
     column_names = get_column_names(conn, table_name)
 
-    get_all_items_sql = f"""
-        SELECT {','.join(column_names)} FROM {table_name};
-    """
-    result_table = db.execute_select(conn, get_all_items_sql)
-
-    # ------GET RELATED INFO
+    result_table = get_items_info(conn, table_name, column_names)
 
     if related_item:
         related_info = get_related_info(conn, table_name, related_item)
