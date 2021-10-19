@@ -12,17 +12,27 @@ from db_init.create_db import DB_FILE
 # DB_FILE = Path(__file__).parent / 'db_file' / 'mylibrary.db'
 
 
-def list_all_items(table_name: str, related_item=None) -> list:
-
-    conn = db.create_connection(DB_FILE)
-
-    # ------GET ALL ITEMs
+def get_column_names(db_conn: sqlite3.Connection, table_name: str) -> list:
 
     get_column_names_sql = f"""
         SELECT name FROM pragma_table_info('{table_name}');
     """
-    column_names = db.execute_select(conn, get_column_names_sql)
-    column_names = [column['name'] for column in column_names]
+    column_names = db.execute_select(db_conn, get_column_names_sql)
+
+    return [column['name'] for column in column_names]
+
+
+def list_all_items(table_name: str, related_item=None) -> list:
+
+    try:
+        conn = db.create_connection(DB_FILE)
+    except sqlite3.Error as err:
+        print(f"Error: {err}")
+        exit(1)
+
+    # ------GET ALL ITEMs
+
+    column_names = get_column_names(conn, table_name)
 
     get_all_items_sql = f"""
         SELECT {','.join(column_names)} FROM {table_name};
