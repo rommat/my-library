@@ -2,6 +2,8 @@
 """
     Manage output
 """
+
+
 import prettytable
 from prettytable import PrettyTable, ALL, NONE
 import textwrap
