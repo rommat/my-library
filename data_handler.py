@@ -22,13 +22,41 @@ def get_column_names(db_conn: sqlite3.Connection, table_name: str) -> list:
     return [column['name'] for column in column_names]
 
 
-def list_all_items(table_name: str, related_item=None) -> list:
+def get_related_info(db_conn, table_name, related_item, item_id=None):
+
+    select_clause = {
+        'book': "b.title book",
+        'author': "a.first_name || ' ' || a.last_name author"
+    }
+    where_clause = ""
+    if item_id:
+        where_clause += f"WHERE ba.{table_name}_id = {item_id}"
+
+    get_authors_books_sql = f"""
+        SELECT ba.{table_name}_id id, {select_clause[related_item]}
+        FROM book b, author a  
+        INNER JOIN book_author ba 
+            ON a.id = ba.author_id AND b.id = ba.book_id
+        {where_clause};
+    """
+    additional_table = db.execute_select(db_conn, get_authors_books_sql)
+    related_info = {}
+    for row in additional_table:
+        try:
+            related_info[row['id']].append(row[related_item])
+        except KeyError:
+            related_info[row['id']] = [row[related_item]]
+
+    return related_info
+
+
+def list_all_items(table_name: str, related_item: str):
 
     try:
         conn = db.create_connection(DB_FILE)
     except sqlite3.Error as err:
         print(f"Error: {err}")
-        exit(1)
+        return False
 
     # ------GET ALL ITEMs
 
@@ -42,23 +70,7 @@ def list_all_items(table_name: str, related_item=None) -> list:
     # ------GET RELATED INFO
 
     if related_item:
-        select_clause = {
-            'book': "b.title book",
-            'author': "a.first_name || ' ' || a.last_name author"
-        }
-        get_authors_books_sql = f"""
-            SELECT ba.{table_name}_id id, {select_clause[related_item]}
-            FROM book b, author a  
-            INNER JOIN book_author ba 
-                ON a.id = ba.author_id AND b.id = ba.book_id;
-        """
-        additional_table = db.execute_select(conn, get_authors_books_sql)
-        related_info = {}
-        for row in additional_table:
-            try:
-                related_info[row['id']].append(row[related_item])
-            except KeyError:
-                related_info[row['id']] = [row[related_item]]
+        related_info = get_related_info(conn, table_name, related_item)
 
         # --Add an extra column to the result
         for row in result_table:
