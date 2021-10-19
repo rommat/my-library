@@ -2,14 +2,14 @@
 """
     Manage output
 """
-
-
-from prettytable import PrettyTable
+import prettytable
+from prettytable import PrettyTable, ALL, NONE
 import textwrap
 
 
 MAX_COLUMN_WIDTH = 40
-MAX_ROW_HEIGHT = 8
+MAX_ROW_HEIGHT = 5
+MAX_ROW_WIDTH = 70
 
 
 def table2console(table: list):
@@ -38,4 +38,30 @@ def table2console(table: list):
             output_table.add_row(new_row)
 
         print(output_table.get_string())
-        
+
+
+def row2console(row: dict):
+    """
+    Format 1-row table and print it to console
+    """
+    output_table = PrettyTable()
+
+    if not row:
+        print("No data")
+    else:
+        output_table.add_column('name', list(row.keys()))
+        value_column = []
+        for item in row.values():
+            if isinstance(item, list):
+                item = ', \n'.join(item)
+            if len(str(item)) > MAX_ROW_WIDTH:
+                item = textwrap.fill(item, MAX_ROW_WIDTH)
+            value_column.append(item)
+        output_table.add_column('value', value_column)
+        output_table.align['name'] = 'r'
+        output_table.align['value'] = 'l'
+        output_table.header = False
+        output_table.hrules = prettytable.ALL
+        output_table.vrules = prettytable.NONE
+
+        print(output_table.get_string())
