@@ -67,11 +67,7 @@ def get_related_info(db_conn: sqlite3.Connection, table_name: str, related_item:
 
 def list_all_items(table_name: str, related_item: str):
 
-    try:
-        conn = db.create_connection(DB_FILE)
-    except sqlite3.Error as err:
-        print(f"Error: {err}")
-        return False
+    conn = db.create_connection(DB_FILE)
 
     column_names = get_column_names(conn, table_name)
 
