@@ -22,7 +22,10 @@ def book_get(parameters, authors):
     related_item = 'author' if authors else None
     try:
         result = dh.get_item('book', parameters, related_item)
-        out.row2console(result)
+        if len(result) == 1:
+            out.row2console(result[0])
+        else:
+            out.table2console(result)
     except sqlite3.Error as err:
         print(f"Error: {err}")
 
@@ -40,6 +43,9 @@ def author_get(parameters, books):
     related_item = 'book' if books else None
     try:
         result = dh.get_item('author', parameters, related_item)
-        out.row2console(result)
+        if len(result) == 1:
+            out.row2console(result[0])
+        else:
+            out.table2console(result)
     except sqlite3.Error as err:
         print(f"Error: {err}")

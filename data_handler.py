@@ -65,6 +65,16 @@ def get_related_info(db_conn: sqlite3.Connection, table_name: str, related_item:
     return related_info
 
 
+def add_column(table, column, column_name):
+    for row in table:
+        try:
+            row[column_name] = column[row['id']]
+        except KeyError:
+            row[column_name] = None
+
+    return table
+
+
 def list_all_items(table_name: str, related_item: str):
 
     conn = db.create_connection(DB_FILE)
@@ -75,12 +85,8 @@ def list_all_items(table_name: str, related_item: str):
 
     if related_item:
         related_info = get_related_info(conn, table_name, related_item)
-        # --Add an extra column to the result
-        for row in result_table:
-            try:
-                row[related_item] = related_info[row['id']]
-            except KeyError:
-                row[related_item] = None
+
+        result_table = add_column(result_table, related_info, related_item)
 
     conn.close()
 
@@ -89,24 +95,15 @@ def list_all_items(table_name: str, related_item: str):
 
 def get_item(table_name: str, parameters: dict, related_item: str):
 
-    try:
-        conn = db.create_connection(DB_FILE)
-    except sqlite3.Error as err:
-        print(f"Error: {err}")
-        return False
+    conn = db.create_connection(DB_FILE)
 
     column_names = get_column_names(conn, table_name)
 
-    result = get_items_info(conn, table_name, column_names, parameters)[0]
+    result = get_items_info(conn, table_name, column_names, parameters)
 
     if related_item:
-        item_id = result['id']
-        related_info = get_related_info(conn, table_name, related_item, item_id)
-        # --Add an extra column to the result
-        try:
-            result[related_item] = related_info[item_id]
-        except KeyError:
-            result[related_item] = None
+        related_info = get_related_info(conn, table_name, related_item)
+        result = add_column(result, related_info, related_item)
 
     conn.close()
 
