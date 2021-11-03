@@ -78,14 +78,11 @@ def add_column(table, column, column_name):
 def list_all_items(table_name: str, related_item: str):
 
     conn = db.create_connection(DB_FILE)
-
     column_names = get_column_names(conn, table_name)
-
     result_table = get_items_info(conn, table_name, column_names)
 
     if related_item:
         related_info = get_related_info(conn, table_name, related_item)
-
         result_table = add_column(result_table, related_info, related_item)
 
     conn.close()
@@ -96,9 +93,7 @@ def list_all_items(table_name: str, related_item: str):
 def get_item(table_name: str, parameters: dict, related_item: str):
 
     conn = db.create_connection(DB_FILE)
-
     column_names = get_column_names(conn, table_name)
-
     result = get_items_info(conn, table_name, column_names, parameters)
 
     if related_item:
